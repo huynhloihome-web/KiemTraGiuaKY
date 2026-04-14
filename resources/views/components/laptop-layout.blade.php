@@ -151,7 +151,7 @@
                                 {{ Auth::user()->name }}
                                 </button>
                                 <div class="dropdown-menu">
-                                <a class="dropdown-item" href="">Quản lý</a>
+                                <a class="dropdown-item" href="{{route('productlist')}}">Quản lý</a>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
                                     <a class="dropdown-item" onclick="event.preventDefault();
