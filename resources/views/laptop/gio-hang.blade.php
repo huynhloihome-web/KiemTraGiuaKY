@@ -1,294 +1,264 @@
-@extends('components.laptop-layout')
-
-@section('title', 'Giỏ hàng')
-
-@section('content')
+<x-laptop-layout>
 
 <div class="container mt-4">
 
-    {{-- THÔNG BÁO LỖI --}}
-    @if(session('error'))
-        <div class="alert alert-danger text-center">
-            {{ session('error') }}
-        </div>
-    @endif
+{{-- ===== THÔNG BÁO ===== --}}
 
+@if(session('error'))
+<div class="alert alert-danger text-center">
+    {{ session('error') }}
+</div>
+@endif
 
-    {{-- THÔNG BÁO ĐẶT HÀNG THÀNH CÔNG --}}
-    @if(session('order_success'))
 
-        <div class="alert alert-success text-center">
+@if(session('order_success'))
+<div class="alert alert-success text-center">
 
-            <h4 class="mb-2">
-                <i class="fa fa-check-circle"></i>
-                ĐẶT HÀNG THÀNH CÔNG
-            </h4>
+    <i class="fa fa-check-circle fa-2x text-success"></i>
 
-            <p>
-                Mã đơn hàng:
-                <strong class="text-danger">
-                    #{{ session('order_success')['order_id'] }}
-                </strong>
-            </p>
+    <h4 class="mt-2 font-weight-bold">
+        ĐẶT HÀNG THÀNH CÔNG!
+    </h4>
 
-            <p>
-                Tổng tiền:
-                <strong class="text-danger">
-                    {{ number_format(session('order_success')['total'],0,',','.') }}đ
-                </strong>
-            </p>
+    <p>
+        Mã đơn hàng:
+        <strong class="text-danger">
+            #{{ session('order_success')['order_id'] }}
+        </strong>
+    </p>
 
-            <p>
-                {{ session('order_success')['mail_status'] }}
-            </p>
+    <p>
+        Tổng tiền:
+        <strong class="text-danger">
+            {{ number_format(session('order_success')['total'],0,',','.') }}đ
+        </strong>
+    </p>
 
-            <a href="{{ url('/') }}"
-               class="btn btn-primary mt-2">
+    <p>
+        {{ session('order_success')['mail_status'] }}
+    </p>
 
-               Tiếp tục mua sắm
+</div>
+@endif
 
-            </a>
 
-        </div>
 
-    @endif
+{{-- ===== TIÊU ĐỀ ===== --}}
 
+<h5 class="text-center font-weight-bold text-primary mt-4">
+    DANH SÁCH SẢN PHẨM
+</h5>
 
 
-    {{-- DANH SÁCH SẢN PHẨM --}}
-    <h5 class="text-center font-weight-bold text-primary">
 
-        DANH SÁCH SẢN PHẨM
+@if(count($products) > 0 && !session('order_success'))
 
-    </h5>
+<table class="table table-bordered table-hover mt-3">
 
+<thead class="bg-light">
 
-    {{-- CÓ SẢN PHẨM --}}
-    @if(count($products) > 0 && !session('order_success'))
+<tr class="text-center">
 
-        <table class="table table-bordered mt-3">
+<th width="6%">STT</th>
 
-            <thead class="bg-light">
+<th>Tên sản phẩm</th>
 
-                <tr class="text-center">
+<th width="12%">Số lượng</th>
 
-                    <th style="width:8%">STT</th>
+<th width="20%">Đơn giá</th>
 
-                    <th>Tên sản phẩm</th>
+<th width="10%">Xóa</th>
 
-                    <th style="width:12%">Số lượng</th>
+</tr>
 
-                    <th style="width:15%">Đơn giá</th>
+</thead>
 
-                    <th style="width:10%">Xóa</th>
 
-                </tr>
 
-            </thead>
+<tbody>
 
-            <tbody>
+@php
+$stt = 1;
+$tong = 0;
+@endphp
 
-                @php
-                    $stt = 1;
-                    $tong = 0;
-                @endphp
 
+@foreach($products as $item)
 
-                @foreach($products as $item)
+@php
+$thanhtien = $item->price * $item->quantity;
+$tong += $thanhtien;
+@endphp
 
-                    @php
-                        $thanhtien = $item->price * $item->quantity;
-                        $tong += $thanhtien;
-                    @endphp
 
+<tr id="row-{{ $item->id }}">
 
-                    <tr id="row-{{ $item->id }}">
+<td class="text-center">
+{{ $stt++ }}
+</td>
 
-                        <td class="text-center">
-                            {{ $stt++ }}
-                        </td>
 
-                        <td>
-                            {{ $item->name }}
-                        </td>
+<td>
+<strong>{{ $item->name }}</strong>
+</td>
 
-                        <td class="text-center">
-                            {{ $item->quantity }}
-                        </td>
 
-                        <td class="text-right">
-                            {{ number_format($item->price,0,',','.') }}đ
-                        </td>
+<td class="text-center">
+{{ $item->quantity }}
+</td>
 
-                        <td class="text-center">
 
-                            <button
-                                class="btn btn-danger btn-sm remove-item"
-                                data-id="{{ $item->id }}">
+<td class="text-right">
+{{ number_format($item->price,0,',','.') }}đ
+</td>
 
-                                Xóa
 
-                            </button>
+<td class="text-center">
+<button
+class="btn btn-danger btn-sm remove-item"
+data-id="{{ $item->id }}">
+Xóa
+</button>
+</td>
 
-                        </td>
+</tr>
 
-                    </tr>
+@endforeach
 
-                @endforeach
+</tbody>
 
-            </tbody>
 
 
+{{-- ===== TỔNG TIỀN ===== --}}
 
-            {{-- TỔNG TIỀN --}}
-            <tfoot>
+<tfoot>
+<tr>
+    <td colspan="3" class="text-center font-weight-bold">
+        Tổng cộng
+    </td>
 
-                <tr>
+    <td class="text-right font-weight-bold text-dark">
+        {{ number_format($tong,0,',','.') }}đ
+    </td>
 
-                    <td colspan="3"></td>
+    <td></td>
+</tr>
+</tfoot>
 
-                    <td class="font-weight-bold text-center">
 
-                        Tổng cộng
+</table>
 
-                    </td>
 
-                    <td class="font-weight-bold text-right text-danger">
 
-                        {{ number_format($tong,0,',','.') }}đ
+{{-- ===== FORM ĐẶT HÀNG ===== --}}
 
-                    </td>
+<div class="text-center mt-3">
 
-                </tr>
+<label class="font-weight-bold">
+Hình thức thanh toán
+</label>
 
-            </tfoot>
+<br>
 
-        </table>
+<form method="POST" action="{{ route('cart.checkout') }}">
+@csrf
 
+<select
+name="hinh_thuc_thanh_toan"
+class="form-control d-inline-block mt-2"
+style="width:200px;">
 
+<option value="1">Tiền mặt</option>
+<option value="2">Chuyển khoản ngân hàng</option>
 
-        {{-- FORM ĐẶT HÀNG --}}
-        <div class="text-center mt-3">
+</select>
 
-            <label class="font-weight-bold">
+<br>
 
-                Hình thức thanh toán
+<button
+type="submit"
+class="btn btn-primary mt-2 px-4">
 
-            </label>
+ĐẶT HÀNG
 
-            <br>
+</button>
 
-
-            <form method="POST" action="{{ route('cart.checkout') }}">
-            @csrf
-
-            <select name="hinh_thuc_thanh_toan"
-                    class="form-control d-inline-block mt-2"
-                    style="width:250px;"
-                    required>
-
-                <option value="1">
-                    Thanh toán khi nhận hàng (COD)
-                </option>
-
-                <option value="2">
-                    Chuyển khoản ngân hàng
-                </option>
-
-            </select>
-
-            <br>
-
-            <button type="submit"
-                    class="btn btn-primary mt-3 px-4">
-
-                    <i class="fa fa-credit-card"></i>
-                    ĐẶT HÀNG
-
-            </button>
-        </form>
-
-        </div>
-
-
-
-    {{-- GIỎ HÀNG RỖNG --}}
-    @elseif(!session('order_success'))
-
-        <div class="alert alert-info text-center mt-4">
-
-            <i class="fa fa-shopping-cart fa-3x mb-3"></i>
-
-            <h4>
-
-                Giỏ hàng của bạn đang trống!
-
-            </h4>
-
-            <a href="{{ url('/') }}"
-               class="btn btn-primary mt-2">
-
-               Mua sắm ngay
-
-            </a>
-
-        </div>
-
-    @endif
+</form>
 
 </div>
 
 
 
-{{-- AJAX XÓA SẢN PHẨM --}}
+@elseif(!session('order_success'))
+
+{{-- ===== GIỎ HÀNG RỖNG ===== --}}
+
+<div class="alert alert-info text-center mt-4">
+
+<i class="fa fa-shopping-cart fa-3x mb-3"></i>
+
+<h4>
+Giỏ hàng của bạn đang trống!
+</h4>
+
+<a href="{{ url('/') }}" class="btn btn-primary mt-2">
+Mua sắm ngay
+</a>
+
+</div>
+
+@endif
+
+</div>
+
+
+
+{{-- ===== AJAX XÓA ===== --}}
+
 <script>
 
 $(document).ready(function(){
 
-    $('.remove-item').click(function(){
+$('.remove-item').click(function(){
 
-        var id = $(this).data('id');
+var id = $(this).data('id');
+var row = $('#row-'+id);
 
-        var row = $('#row-' + id);
+if(confirm('Bạn có muốn xóa sản phẩm này?')){
 
-        if(confirm('Bạn có muốn xóa sản phẩm này?')){
+$.ajax({
 
-            $.ajax({
+type:"POST",
+url:"{{ route('cart.remove') }}",
 
-                type: "POST",
+data:{
+"_token":"{{ csrf_token() }}",
+"id":id
+},
 
-                url: "{{ route('cart.remove') }}",
+success:function(response){
 
-                data: {
+row.remove();
 
-                    "_token": "{{ csrf_token() }}",
+$('#cart-number-product')
+.html(response.total_items);
 
-                    "id": id
+location.reload();
 
-                },
+},
 
-                success: function(response){
+error:function(){
+alert('Có lỗi xảy ra!');
+}
 
-                    row.remove();
+});
 
-                    location.reload();
+}
 
-                },
-
-                error: function(){
-
-                    alert('Có lỗi xảy ra!');
-
-                }
-
-            });
-
-        }
-
-    });
+});
 
 });
 
 </script>
 
-@endsection
+</x-laptop-layout>

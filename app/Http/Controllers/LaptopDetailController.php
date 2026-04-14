@@ -126,7 +126,7 @@ class LaptopDetailController extends Controller
     }
     
     /**
-     * Xử lý đặt hàng
+     * Xử lý đặt hàng (CÓ GỬI MAIL)
      */
     public function checkout(Request $request)
     {
@@ -158,22 +158,27 @@ class LaptopDetailController extends Controller
             ->where('status', 1)
             ->get();
         
-        // Tạo đơn hàng
-        $order = [
-            'ngay_dat_hang' => DB::raw('NOW()'),
-            'tinh_trang' => 1,
-            'hinh_thuc_thanh_toan' => $request->hinh_thuc_thanh_toan,
-            'user_id' => Auth::user()->id
-        ];
+        // Tính tổng tiền
+        $total = 0;
+        foreach ($data as $row) {
+            $total += $row->gia * $cart[$row->id]['quantity'];
+        }
         
-        DB::transaction(function () use ($order, $cart, $data) {
+        $orderId = null;
+        
+        DB::transaction(function () use (&$orderId, $cart, $data, $request) {
             // Insert đơn hàng
-            $id_don_hang = DB::table('don_hang')->insertGetId($order);
+            $orderId = DB::table('don_hang')->insertGetId([
+                'ngay_dat_hang' => DB::raw('NOW()'),
+                'tinh_trang' => 1,
+                'hinh_thuc_thanh_toan' => $request->hinh_thuc_thanh_toan,
+                'user_id' => Auth::user()->id
+            ]);
             
             // Insert chi tiết đơn hàng
             foreach ($data as $row) {
                 DB::table('chi_tiet_don_hang')->insert([
-                    'ma_don_hang' => $id_don_hang,
+                    'ma_don_hang' => $orderId,
                     'laptop_id' => $row->id,
                     'so_luong' => $cart[$row->id]['quantity'],
                     'don_gia' => $row->gia
@@ -184,7 +189,42 @@ class LaptopDetailController extends Controller
             session()->forget('cart');
         });
         
-        return redirect()->route('cart.view')->with('status', 'Đặt hàng thành công!');
+        // ========== GỬI MAIL ==========
+        $user = Auth::user();
+        
+        $quantities = [];
+        foreach ($cart as $id => $item) {
+            $quantities[$id] = $item['quantity'];
+        }
+        
+        $orderInfo = [
+            'order_id' => $orderId,
+            'products' => $data,
+            'quantities' => $quantities,
+            'total' => $total,
+            'payment_method' => $request->hinh_thuc_thanh_toan,
+            'user_name' => $user->name,
+            'user_email' => $user->email,
+            'order_date' => now()->format('d/m/Y H:i:s')
+        ];
+        
+        $mailStatus = '';
+        try {
+            Notification::send($user, new OrderSuccessNotification($orderInfo));
+            $mailStatus = 'Email xác nhận đã được gửi đến ' . $user->email;
+        } catch (\Exception $e) {
+            \Log::error('Gửi mail thất bại: ' . $e->getMessage());
+            $mailStatus = 'Đặt hàng thành công nhưng gửi email thất bại.';
+        }
+        // ========== KẾT THÚC GỬI MAIL ==========
+        
+        return redirect()
+            ->route('cart.view')
+            ->with('order_success', [
+                'order_id' => $orderId,
+                'total' => $total,
+                'mail_status' => $mailStatus
+            ]);
     }
     
     /**
