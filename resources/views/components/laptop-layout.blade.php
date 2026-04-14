@@ -172,7 +172,7 @@
         </div>
     </header>
     <main class='container'>
-        @yield('content')
+        {{$slot}}
     </main>
 
 </body>

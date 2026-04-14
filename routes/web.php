@@ -8,7 +8,7 @@ Route::get('/', [LaptopController::class, 'index'])->name('laptop.home');
 
 use App\Http\Controllers\Controller5;
 use App\Http\Controllers\ProductManageController;
-
+use App\Http\Controllers\LaptopDetailController;
 
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -17,12 +17,11 @@ Route::get('/laptop/theloai/{id}', [LaptopController::class, 'index']);
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/quan-ly-san-pham', [ProductManageController::class, 'index'])->name('productlist');
-    Route::get('/quan-ly-san-pham/xem/{id}', [ProductManageController::class, 'detail'])->name('productdetail');
+    Route::get('/quan-ly-san-pham/xem/{id}', [LaptopDetailController::class, 'show'])->name('product.detail');
     Route::post('/quan-ly-san-pham/xoa', [ProductManageController::class, 'delete'])->name('productdelete');
 });
 Route::get('/timkiem', [Controller5::class, 'timkiem'])->name('laptop.timkiem');
 
-use App\Http\Controllers\LaptopDetailController;
 
 // Route chi tiết sản phẩm và giỏ hàng
 Route::get('/laptop/{id}', [LaptopDetailController::class, 'show'])->name('laptop.detail');

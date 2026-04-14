@@ -1,12 +1,10 @@
 <?php
-// app/Http/Controllers/LaptopDetailController.php
 
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\OrderSuccessNotification;
 
@@ -20,11 +18,11 @@ class LaptopDetailController extends Controller
         // Lấy thông tin laptop
         $laptop = DB::table('san_pham')
             ->where('id', $id)
-            ->where('status', 1) // Chỉ lấy sản phẩm chưa bị xóa mềm
+            ->where('status', 1)
             ->first();
         
         if (!$laptop) {
-            abort(404, 'Sản phẩm không tồn tại');
+            abort(404);
         }
         
         // Lấy thông tin danh mục
@@ -55,7 +53,6 @@ class LaptopDetailController extends Controller
         $product = DB::table('san_pham')
             ->where('id', $id)
             ->where('status', 1)
-            ->select('id', 'ten', 'tieu_de', 'gia', 'hinh_anh')
             ->first();
         
         if (!$product) {
@@ -65,10 +62,8 @@ class LaptopDetailController extends Controller
         $cart = session()->get('cart', []);
         
         if (isset($cart[$id])) {
-            // Nếu sản phẩm đã có trong giỏ, cập nhật số lượng
             $cart[$id]['quantity'] += $num;
         } else {
-            // Thêm sản phẩm mới vào giỏ
             $cart[$id] = [
                 'id' => $product->id,
                 'name' => $product->ten ?? $product->tieu_de,
@@ -80,8 +75,11 @@ class LaptopDetailController extends Controller
         
         session()->put('cart', $cart);
         
-        // Trả về số lượng sản phẩm trong giỏ
-        $totalItems = array_sum(array_column($cart, 'quantity'));
+        // Tính tổng số lượng sản phẩm trong giỏ
+        $totalItems = 0;
+        foreach ($cart as $item) {
+            $totalItems += $item['quantity'];
+        }
         
         return response()->json($totalItems);
     }
@@ -92,8 +90,8 @@ class LaptopDetailController extends Controller
     public function viewCart()
     {
         $cart = session()->get('cart', []);
-        $total = 0;
         $products = [];
+        $total = 0;
         
         if (!empty($cart)) {
             foreach ($cart as $item) {
@@ -102,7 +100,6 @@ class LaptopDetailController extends Controller
             }
         }
         
-        // Lấy danh sách danh mục cho menu
         $categories = DB::table('danh_muc_laptop')->get();
         
         return view('laptop.gio-hang', compact('products', 'total', 'categories'));
@@ -125,121 +122,70 @@ class LaptopDetailController extends Controller
             session()->put('cart', $cart);
         }
         
-        // Tính lại tổng số lượng
-        $totalItems = array_sum(array_column($cart, 'quantity'));
-        
-        return response()->json([
-            'success' => true,
-            'total_items' => $totalItems,
-            'cart_count' => count($cart)
-        ]);
+        return response()->json(['success' => true]);
     }
     
-public function checkout(Request $request)
-{
-    // Validate hình thức thanh toán
-    $request->validate([
-        'hinh_thuc_thanh_toan' => ['required', 'numeric', 'in:1,2']
-    ]);
-
-    // Kiểm tra đăng nhập
-    if (!Auth::check()) {
-        return redirect()
-            ->route('login')
-            ->with('error', 'Vui lòng đăng nhập để đặt hàng');
-    }
-
-    // Kiểm tra giỏ hàng
-    $cart = session()->get('cart', []);
-    if (empty($cart)) {
-        return redirect()
-            ->route('cart.view')
-            ->with('error', 'Giỏ hàng trống');
-    }
-
-    // Lấy sản phẩm
-    $productIds = array_keys($cart);
-    $products = DB::table('san_pham')
-        ->whereIn('id', $productIds)
-        ->where('status', 1)
-        ->get();
-
-    $total = 0;
-    $details = [];
-
-    foreach ($cart as $id => $item) {
-        $product = $products->firstWhere('id', $id);
-        if (!$product) continue;
-
-        $quantity = $item['quantity'];
-        $price = $product->gia;
-        $total += $price * $quantity;
-
-        $details[] = [
-            'laptop_id' => $id,
-            'so_luong' => $quantity,
-            'don_gia' => $price
-        ];
-    }
-
-    // Lưu đơn hàng
-    $orderId = null;
-    DB::transaction(function () use (&$orderId, $details, $request) {
-        $orderId = DB::table('don_hang')->insertGetId([
+    /**
+     * Xử lý đặt hàng
+     */
+    public function checkout(Request $request)
+    {
+        $request->validate([
+            'hinh_thuc_thanh_toan' => ['required', 'numeric']
+        ]);
+        
+        // Kiểm tra đăng nhập
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'Vui lòng đăng nhập để đặt hàng');
+        }
+        
+        // Kiểm tra giỏ hàng
+        $cart = session()->get('cart', []);
+        if (empty($cart)) {
+            return redirect()->route('cart.view')->with('error', 'Giỏ hàng trống');
+        }
+        
+        // Lấy danh sách id sản phẩm
+        $list_id = '';
+        foreach ($cart as $id => $item) {
+            $list_id .= $id . ', ';
+        }
+        $list_id = substr($list_id, 0, strlen($list_id) - 2);
+        
+        // Lấy thông tin sản phẩm
+        $data = DB::table('san_pham')
+            ->whereRaw('id in (' . $list_id . ')')
+            ->where('status', 1)
+            ->get();
+        
+        // Tạo đơn hàng
+        $order = [
             'ngay_dat_hang' => DB::raw('NOW()'),
             'tinh_trang' => 1,
             'hinh_thuc_thanh_toan' => $request->hinh_thuc_thanh_toan,
-            'user_id' => Auth::id()
-        ]);
-
-        foreach ($details as &$d) {
-            $d['ma_don_hang'] = $orderId;
-        }
-
-        DB::table('chi_tiet_don_hang')->insert($details);
-    });
-
-    // Chuẩn bị dữ liệu gửi mail
-    $user = Auth::user();
-    
-    $quantities = [];
-    foreach ($cart as $id => $item) {
-        $quantities[$id] = $item['quantity'];
+            'user_id' => Auth::user()->id
+        ];
+        
+        DB::transaction(function () use ($order, $cart, $data) {
+            // Insert đơn hàng
+            $id_don_hang = DB::table('don_hang')->insertGetId($order);
+            
+            // Insert chi tiết đơn hàng
+            foreach ($data as $row) {
+                DB::table('chi_tiet_don_hang')->insert([
+                    'ma_don_hang' => $id_don_hang,
+                    'laptop_id' => $row->id,
+                    'so_luong' => $cart[$row->id]['quantity'],
+                    'don_gia' => $row->gia
+                ]);
+            }
+            
+            // Xóa giỏ hàng
+            session()->forget('cart');
+        });
+        
+        return redirect()->route('cart.view')->with('status', 'Đặt hàng thành công!');
     }
-
-    $orderInfo = [
-        'order_id' => $orderId,
-        'products' => $products,
-        'quantities' => $quantities,
-        'total' => $total,
-        'payment_method' => $request->hinh_thuc_thanh_toan,
-        'user_name' => $user->name,
-        'user_email' => $user->email,
-        'order_date' => now()->format('d/m/Y H:i:s')
-    ];
-
-    // GỬI MAIL
-    $mailStatus = '';
-    try {
-        Notification::send($user, new OrderSuccessNotification($orderInfo));
-        $mailStatus = 'Email xác nhận đã được gửi đến ' . $user->email;
-    } catch (\Exception $e) {
-        \Log::error('Gửi mail thất bại: ' . $e->getMessage());
-        $mailStatus = 'Đặt hàng thành công nhưng gửi email thất bại. Chúng tôi sẽ liên hệ lại sau.';
-    }
-
-    // XÓA GIỎ HÀNG
-    session()->forget('cart');
-
-    // THÔNG BÁO THÀNH CÔNG
-    return redirect()
-        ->route('cart.view')
-        ->with('order_success', [
-            'order_id' => $orderId,
-            'total' => $total,
-            'mail_status' => $mailStatus
-        ]);
-}
     
     /**
      * Lấy số lượng sản phẩm trong giỏ hàng (AJAX)
@@ -247,8 +193,11 @@ public function checkout(Request $request)
     public function getCartCount()
     {
         $cart = session()->get('cart', []);
-        $totalItems = array_sum(array_column($cart, 'quantity'));
+        $totalItems = 0;
+        foreach ($cart as $item) {
+            $totalItems += $item['quantity'];
+        }
         
-        return response()->json(['count' => $totalItems]);
+        return response()->json(['total_items' => $totalItems]);
     }
 }
