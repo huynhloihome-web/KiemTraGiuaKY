@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{$title}}</title>
+    <title>@yield('title', config('app.name', 'Laptop Store'))</title>
     <link rel="stylesheet" href="{{asset('library/bootstrap.min.css')}}">
 
     <script src="{{asset('library/jquery.slim.min.js')}}"></script>
