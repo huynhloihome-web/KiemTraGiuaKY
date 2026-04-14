@@ -1,52 +1,118 @@
 <x-guest-layout>
-    <form method="POST" action="{{ route('register') }}">
-        @csrf
 
-        <!-- Name -->
-        <div>
-            <x-input-label for="name" :value="__('Name')" />
-            <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
-            <x-input-error :messages="$errors->get('name')" class="mt-2" />
+<style>
+.register-wrapper {
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: url('{{ asset('images/banner.png') }}') no-repeat center center;
+    background-size: cover;
+    position: relative;
+}
+
+/* overlay */
+.register-wrapper::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+}
+
+/* card */
+.register-box {
+    position: relative;
+    z-index: 2;
+    background: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    width: 380px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+/* brand */
+.brand {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.brand img {
+    width: 70px;
+}
+
+.brand h2 {
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+</style>
+
+<div class="register-wrapper">
+
+    <div class="register-box">
+
+        <!-- LOGO -->
+        <div class="brand">
+            <img src="{{asset('images/banner.png')}}">
+            <h2>ShopLaptop</h2>
+            <p>Đăng ký tài khoản mới</p>
         </div>
 
-        <!-- Email Address -->
-        <div class="mt-4">
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
-        </div>
+        <form method="POST" action="{{ route('register') }}">
+            @csrf
 
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
+            <!-- Name -->
+            <div>
+                <label>Họ tên</label>
+                <input type="text" name="name"
+                    class="block w-full border p-2 rounded"
+                    placeholder="Nhập họ tên"
+                    value="{{ old('name') }}" required>
+            </div>
 
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="new-password" />
+            <!-- Email -->
+            <div class="mt-3">
+                <label>Email</label>
+                <input type="email" name="email"
+                    class="block w-full border p-2 rounded"
+                    placeholder="Nhập email"
+                    value="{{ old('email') }}" required>
+            </div>
 
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-        </div>
+            <!-- Password -->
+            <div class="mt-3">
+                <label>Mật khẩu</label>
+                <input type="password" name="password"
+                    class="block w-full border p-2 rounded"
+                    placeholder="Nhập mật khẩu" required>
+            </div>
 
-        <!-- Confirm Password -->
-        <div class="mt-4">
-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
+            <!-- Confirm -->
+            <div class="mt-3">
+                <label>Nhập lại mật khẩu</label>
+                <input type="password" name="password_confirmation"
+                    class="block w-full border p-2 rounded"
+                    placeholder="Nhập lại mật khẩu" required>
+            </div>
 
-            <x-text-input id="password_confirmation" class="block mt-1 w-full"
-                            type="password"
-                            name="password_confirmation" required autocomplete="new-password" />
+            <!-- BUTTON -->
+            <button class="mt-4 w-full bg-blue-600 text-white p-2 rounded">
+                Đăng ký
+            </button>
 
-            <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
-        </div>
+            <!-- LOGIN LINK -->
+            <div class="text-center mt-3">
+                <a href="{{ route('login') }}" class="text-blue-600 text-sm">
+                    Đã có tài khoản? Đăng nhập
+                </a>
+            </div>
 
-        <div class="flex items-center justify-end mt-4">
-            <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('login') }}">
-                {{ __('Already registered?') }}
-            </a>
+        </form>
 
-            <x-primary-button class="ms-4">
-                {{ __('Register') }}
-            </x-primary-button>
-        </div>
-    </form>
+    </div>
+
+</div>
+
 </x-guest-layout>
