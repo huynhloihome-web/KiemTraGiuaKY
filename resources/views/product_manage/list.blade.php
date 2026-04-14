@@ -36,7 +36,7 @@
                 </td>
                 <td>
                     <div class="btn-group">
-                        <a href="{{route('productdetail',['id'=>$row->id])}}" class="btn btn-sm btn-primary">Xem</a>
+                        <a href="{{route('product.detail',['id'=>$row->id])}}" class="btn btn-sm btn-primary">Xem</a>
                         &nbsp;
                         <form method="post" action="{{route('productdelete')}}" onsubmit="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này không?');">
                             @csrf
