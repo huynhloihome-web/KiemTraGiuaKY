@@ -4,176 +4,183 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{$title}}</title>
-    <link rel="stylesheet" href="{{asset('library/bootstrap.min.css')}}">
 
+    <link rel="stylesheet" href="{{asset('library/bootstrap.min.css')}}">
     <script src="{{asset('library/jquery.slim.min.js')}}"></script>
     <script src="{{asset('library/popper.min.js')}}"></script>
     <script src="{{asset('library/bootstrap.bundle.min.js')}}"></script>
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <script src="{{asset('library/jquery-3.7.1.js')}}" ></script>
+
+    <script src="{{asset('library/jquery-3.7.1.js')}}"></script>
     <script src="https://cdn.datatables.net/2.0.3/js/dataTables.js"></script>
     <script src="https://cdn.datatables.net/2.0.3/js/dataTables.bootstrap4.js"></script>
     <link rel="stylesheet" href="https://cdn.datatables.net/2.0.3/css/dataTables.bootstrap4.css">
 
     <style>
+        /* === PHẦN CSS NGUYÊN BẢN CỦA PROJECT === */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
             font-size: 14px;
-        
         }
 
-        .container {
-            max-width: 1000px; /* Chiều rộng tối đa của nội dung */
-            margin: 0 auto; /* Căn giữa nội dung */
-            padding: 0 15px;
-        }
+       .container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
 
-        .navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding:5px 0;
+        /* === PHẦN CSS CÁC CHỨC NĂNG BẠN MỚI THÊM === */
+        .custom-navbar {
             background-color: #122333;
-            max-width:1000px;
-            font-weight:bold;
-            margin:0 auto;
+            padding: 10px 0;
         }
 
+        .navbar-nav .nav-link {
+            color: white !important;
+            font-weight: 500;
+        }
 
+        .navbar-nav .nav-link:hover {
+            color: #00d4ff !important;
+        }
+
+        /* SEARCH */
         .search-bar {
-            flex: 1; /* Chiếm không gian còn lại */
-            max-width: 500px;
-            margin: 0 30px;
-            
+            flex: 1;
+            max-width: 400px;
             position: relative;
+            margin: 0 20px;
         }
 
         .search-bar input {
             width: 100%;
-            padding: 5px 10px;
-            border: none;
             border-radius: 20px;
-            background-color: white;
+            border: none;
+            padding: 6px 15px;
         }
 
-        .auth-buttons .btn + .btn {
-            margin-left: 10px;
-        }
-        .nav-item a
-        {
-            color: #fff!important;
-        }
-        .nav-item
-        {
-            padding:0 5px;
-        }
-
-        .search-btn
-        {
-            width:50px; 
-            height: 30px;
-            color:black; 
-            background-color:white;
-            border-radius:30px;
-            border:none;
+        .search-btn {
             position: absolute;
-            right: 0;
+            right: 8px;
+            top: 3px;
+            border: none;
+            background: transparent;
         }
 
-        .list-laptop
-        {
-            display:grid;
-            grid-template-columns:repeat(5,20%);
+        /* CART */
+        .cart-box {
+            position: relative;
+            margin-left: 15px;
+            margin-right: 15px;
         }
-        .laptop
-        {
-            margin:10px;
-            text-align:center;
-            border-radius:5px;
-            border:1px solid #dbdbdb;
-            overflow: hidden;
-            cursor:pointer;
+
+        .cart-box i {
+            font-size: 22px;
+            color: white;
         }
-        .laptop a
-        {
-            color: black;
-            text-decoration:none;
+
+        .cart-count {
+            position: absolute;
+            top: -5px;
+            right: -10px;
+            background: #23b85c;
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            padding: 2px 6px;
         }
-        .laptop-info
-        {
-            display:grid;
-            grid-template-columns:repeat(2,30% 70%);
+
+        /* BANNER */
+        .banner img {
+            width: 100%;
+            height: auto;
+            display: block;
         }
+        
     </style>
 </head>
+
 <body>
-    <header>
-        <div style='text-align:center; max-width:1000px; margin:0 auto'>
-            <img src="{{asset('images/banner.png')}}" width="1000px">
-            <nav class="navbar navbar-light navbar-expand-sm">
-                <div class='container-fluid p-0'>
-                    <div class='col-6 p-0'>
-                        <ul class="navbar-nav">
-                            @foreach($categories as $category)
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{url('laptop/theloai/'.$category->id)}}">{{$category->ten_danh_muc}}</a>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </div>
-                    <div class="search-bar">
-                        <form method="post" action="{{url('/timkiem')}}">
-                            {{ csrf_field() }}
-                            <input type="text" name="keyword" placeholder="Tìm kiếm laptop...">
-                            <button class="search-btn"><i class="fa fa-search" aria-hidden="true"></i></button>
-                        </form>
-                    </div>
-                    <div style='color:white;position:relative' class='mr-2'>
-                        <div style='width:20px; height:20px;background-color:#23b85c; font-size:12px; border:none;
-                             border-radius:50%; position:absolute;right:2px;top:-2px' id='cart-number-product'>
-                                @if (session('cart'))
-                                     {{ count(session('cart')) }}
-                                @else
-                                    0
-                                @endif
-                        </div>
-                        <a href="{{url('/gio-hang')}}" style='cursor:pointer;color:white;'>
-                            <i class="fa fa-cart-arrow-down fa-2x mr-2 mt-1" aria-hidden="true"></i>
+
+<header>
+    <div class="container">
+        <div class="banner">
+            <img src="{{asset('images/banner.png')}}" class="img-fluid w-100" style="display: block;" alt="Banner">
+        </div>
+    </div>
+
+    <div class="container p-0"> 
+        <nav class="navbar navbar-expand-lg navbar-dark custom-navbar px-0" style="border-radius: 0 0 4px 4px;">
+           <div class="container d-flex align-items-center justify-content-between p-0">
+
+                <ul class="navbar-nav d-flex flex-row" style="white-space: nowrap; overflow-x: auto; scrollbar-width: none;">
+                    <li class="nav-item px-2">
+                        <a class="nav-link {{ !request('brand') ? 'font-weight-bold text-info' : '' }}" href="{{ route('laptop.home') }}">
+                        </a>
+                    </li>
+                    @foreach($categories as $cat)
+                        <li class="nav-item px-2">
+                            <a class="nav-link {{ request('brand') == $cat->id ? 'font-weight-bold text-info' : '' }}" 
+                               href="{{ route('laptop.home', ['brand' => $cat->id]) }}">
+                                {{ $cat->ten_danh_muc }}
+                            </a>
+                        </li>
+                    @endforeach
+                </ul>
+
+                <form method="post" action="{{url('/timkiem')}}" class="search-bar">
+                    {{ csrf_field() }}
+                    <input type="text" name="keyword" placeholder="Tìm kiếm laptop...">
+                    <button class="search-btn">
+                        <i class="fa fa-search"></i>
+                    </button>
+                </form>
+
+                <div class="d-flex align-items-center px-2" style="white-space: nowrap;">
+                    
+                    <div class="cart-box">
+                        <a href="{{url('/gio-hang')}}">
+                            <i class="fa fa-shopping-cart"></i>
+                            <span class="cart-count">
+                                {{ session('cart') ? count(session('cart')) : 0 }}
+                            </span>
                         </a>
                     </div>
 
-                    <div class='col-2 p-0 d-flex'>
+                    <div class="ml-3 d-flex align-items-center">
                         @auth
                             <div class="dropdown">
-                                <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown">
-                                {{ Auth::user()->name }}
+                                <button type="button" class="btn btn-success btn-sm dropdown-toggle" data-toggle="dropdown">
+                                    {{ Auth::user()->name }}
                                 </button>
-                                <div class="dropdown-menu">
-                                <a class="dropdown-item" href="">Quản lý</a>
-                                <form method="POST" action="{{ route('logout') }}">
-                                    @csrf
-                                    <a class="dropdown-item" onclick="event.preventDefault();
-                                                        this.closest('form').submit();">Đăng xuất</a>
-                                </form>
+                                <div class="dropdown-menu dropdown-menu-right">
+                                    <a class="dropdown-item" href="#">Quản lý</a>
+                                    <form method="POST" action="{{ route('logout') }}">
+                                        @csrf
+                                        <a class="dropdown-item" href="#" onclick="event.preventDefault(); this.closest('form').submit();">Đăng xuất</a>
+                                    </form>
                                 </div>
                             </div>
                         @else
-                            <a href="{{ route('login') }}">
-                                <button class='btn btn-sm btn-primary'>Đăng nhập</button>
-                            </a>&nbsp;
-                            <a href="{{ route('register') }}">
-                                <button class='btn btn-sm btn-success'>Đăng ký</button>
-                            </a>
+                            <a href="{{ route('login') }}" class="btn btn-primary btn-sm">Đăng nhập</a>&nbsp;
+                            <a href="{{ route('register') }}" class="btn btn-success btn-sm">Đăng ký</a>
                         @endauth
+                    </div>
+
                 </div>
-            </nav>
-        </div>
-    </header>
-    <main class='container'>
-        {{$slot}}
-    </main>
+
+            </div>
+        </nav>
+    </div>
+</header>
+
+<main class="container mt-3">
+    {{$slot}}
+</main>
 
 </body>
 </html>
